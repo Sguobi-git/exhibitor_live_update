@@ -1,0 +1,12 @@
+[gcp_service_account]  
+"type" = "service_account"
+  "project_id" = "gestion-exposants"
+  "private_key_id" = "32fb1e27b63a98394ed776cde5fa3faaf16c1125"
+  "private_key" = "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQDrDLHlKCc7Sn98\nGlKtuBD+qiUMoMia6UfmvkJ1BAx3ixKWYDO/TPQB7oOcqnJmUHTvcnUSou2q5yMR\n99YfP4Jvrdhe12d8/FB8hFlxnkvQ1kTnOzGvP1aXI+MbEHKAjXJsbPBFR7iqbNZk\nBismX4yLdehhkciYjkELD/CBmVAcp69i84chmmy4WKnbP7oQsAS+m8ogbQLu/9lJ\nvlCAarbeIapoUeKWyHSB8UgX+qDC4qeD6vLyg1Zu5ybLj2gR+CiMPxPFNJrIdruR\nwqEs378DeL6WAPVL4rb35uprlKZ1XRHhJ5PKX0NWi0TWDhA3HWrwGxE6x0gLKbSl\nGa9Ywox1AgMBAAECggEAAtRM98JQdUnk08rr5yUorF9O9y7BLf8FtDBWbIQp3Pak\nRR6qXKqF6zMAZsIDgtWk5tMGjnJz8ZqJbOuGPwpePxdAIk6z+5X4YSXGTbhMXUP6\nn6N4WaqdalABNcukBCsnci/lYYll5NkVDcMb07rXKJtd/LB7e28CaPituihYUAnF\nnrgWNOg1sevf2TmtwHXv9jBjASsrzBzHm0TVx9HtrysDcJLLCiBK1EHtPF8kVTZ9\n1OnR67M+2dD5X75JHouEUmKv2IXPSa3xS6zeEcedcgQ56MW5g2IU+WHkF5RHNTR0\nU4t03PWsaBH70A2/QDTlk25/XAJqZf7T3c0mHml67QKBgQD6bkEabwqk7a2rDWlZ\n7KyKeiK4NBF8Ny1Oyl2g+R0mO5CYOP2oZmRL62p2CMY5PJNGv+eKOw3XussypUf6\n2REkMiaKzXAOS0v6fmepNbAJSsmUNn0dZ7KdLczRR8OzHyJrtpQN2bUlNcYpOn+S\nZ8cZ1wnt6mbwHCco33H93TlkhwKBgQDwRt+TvvT66EE3KfboXtyuc81BXOgy1qm2\nRTLZq5iy+zchPyI7Kvc4T47jccludGH3LXUbEpf0lj9z0+ZmSNPUgzOf/iELZ1w5\nfWMiBrKthM5CXeAJ0jWTJ1rIx6jaZt41vPCe5bf2pC/Ty0m18esJMJ4WPf5wJjgd\nYS/LoMlCIwKBgCW5FfV1ZJUTeGWbz5LMI/F4FGLK9RdQ+HI16YSmAc4QiudjLlJ/\nmfwVqiO9jp5wkX7GyYn4+0zTxmgKnZ0btYlORKAD8i01CmzhPZwviiTcLyE0VARp\n6m3iyEd+F+yTdAvlpMexU6gXQZJUTYMwPr2VttkvxfHFS+DMR8+F029hAoGAAZz4\nM02851JX3b7yYW0Bnko4vo+ZH35BdW/Rf5SfWdRF8nsyB6OqNT6TfwNsjslJPxeX\nCa9+Ra4cjvKFQXqLsYmP9ysFncX74Ibu+3OAD5osqFVpA6fdpDdHbMGqaIz4QPQb\nyXVRXt6LU6ixvf75zP3+kbeo1afsCIZ2g694qnECgYEA1qwgqtOTGGPpdNNx+CYy\nA6Re7y4KkAPseDg38hvXfvOsDb06ie5Hi8EA+q8vx/Cb6yeAFJDkQ4Y1DXUkv7Xr\n9Q9fieWF7+wEH7NzDaPyjx4D9zJSYbRwAUHSxIsBajtMq6JXCfYMS5SqrHqnpcw4\nC+yuEJxOvlp5mTzXXVF/fuY=\n-----END PRIVATE KEY-----\n"
+  "client_email" = "souhail@gestion-exposants.iam.gserviceaccount.com"
+  "client_id" = "103177263691776184295"
+  "auth_uri" = "https://accounts.google.com/o/oauth2/auth"
+  "token_uri" = "https://oauth2.googleapis.com/token"
+  "auth_provider_x509_cert_url" = "https://www.googleapis.com/oauth2/v1/certs"
+  "client_x509_cert_url" = "https://www.googleapis.com/robot/v1/metadata/x509/souhail%40gestion-exposants.iam.gserviceaccount.com"
+  "universe_domain" = "googleapis.com"
