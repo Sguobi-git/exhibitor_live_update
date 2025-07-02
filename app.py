@@ -5,8 +5,8 @@ from datetime import datetime
 import time
 import logging
 
-# Import your existing Google Sheets manager
-# from data.test_data_manager import GoogleSheetsManager
+# Import the Google Sheets manager
+from sheets_integration import GoogleSheetsManager
 
 app = Flask(__name__)
 CORS(app)  # Enable CORS for React app
@@ -16,7 +16,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # Initialize Google Sheets Manager
-# gs_manager = GoogleSheetsManager()
+gs_manager = GoogleSheetsManager()  # Add your credentials path if needed
 
 # Your Google Sheet ID
 SHEET_ID = "1dYeok-Dy_7a03AhPDLV2NNmGbRNoCD3q0zaAHPwxxCE"
@@ -79,38 +79,24 @@ def get_mock_orders():
     ]
 
 def load_orders_from_sheets():
-    """Load orders from Google Sheets - replace mock data with actual implementation"""
+    """Load orders from Google Sheets"""
     try:
-        # Uncomment and modify this when ready to connect to real sheets
-        # orders_df = gs_manager.get_data(SHEET_ID, "Orders")
-        # 
-        # # Clean the data (based on your existing code)
-        # orders_df.columns = orders_df.iloc[0].str.strip()
-        # orders_df = orders_df[1:].reset_index(drop=True)
-        # 
-        # # Convert to list of dictionaries
-        # orders = []
-        # for _, row in orders_df.iterrows():
-        #     orders.append({
-        #         'id': f"ORD-{row.get('Date', '')}-{row.get('Booth #', '')}",
-        #         'booth_number': str(row.get('Booth #', '')),
-        #         'exhibitor_name': row.get('Exhibitor Name', ''),
-        #         'item': row.get('Item', ''),
-        #         'color': row.get('Color', ''),
-        #         'quantity': row.get('Quantity', 1),
-        #         'status': map_status(row.get('Status', '')),
-        #         'order_date': row.get('Date', ''),
-        #         'comments': row.get('Comments', ''),
-        #         'section': row.get('Section', '')
-        #     })
-        # 
-        # return orders
+        # Get all orders from Google Sheets
+        all_orders = []
+        df = gs_manager.get_data(SHEET_ID, "Orders")
         
-        # For now, return mock data
-        return get_mock_orders()
+        if not df.empty:
+            all_orders = gs_manager.parse_orders_data(df)
+            logger.info(f"Loaded {len(all_orders)} orders from Google Sheets")
+        else:
+            logger.warning("No data found in Google Sheets, using mock data")
+            all_orders = get_mock_orders()
+        
+        return all_orders
         
     except Exception as e:
         logger.error(f"Error loading orders from sheets: {e}")
+        logger.info("Falling back to mock data")
         return get_mock_orders()
 
 def map_status(sheet_status):
@@ -134,26 +120,36 @@ def health_check():
 @app.route('/api/exhibitors', methods=['GET'])
 def get_exhibitors():
     """Get list of all exhibitors"""
-    orders = load_orders_from_sheets()
-    exhibitors = {}
-    
-    for order in orders:
-        exhibitor_name = order['exhibitor_name']
-        booth_number = order['booth_number']
+    try:
+        exhibitors = gs_manager.get_all_exhibitors(SHEET_ID)
+        if not exhibitors:
+            # Fallback to extracting from mock data
+            orders = load_orders_from_sheets()
+            exhibitors = {}
+            
+            for order in orders:
+                exhibitor_name = order['exhibitor_name']
+                booth_number = order['booth_number']
+                
+                if exhibitor_name not in exhibitors:
+                    exhibitors[exhibitor_name] = {
+                        'name': exhibitor_name,
+                        'booth': booth_number,
+                        'total_orders': 0,
+                        'delivered_orders': 0
+                    }
+                
+                exhibitors[exhibitor_name]['total_orders'] += 1
+                if order['status'] == 'delivered':
+                    exhibitors[exhibitor_name]['delivered_orders'] += 1
+            
+            exhibitors = list(exhibitors.values())
         
-        if exhibitor_name not in exhibitors:
-            exhibitors[exhibitor_name] = {
-                'name': exhibitor_name,
-                'booth': booth_number,
-                'total_orders': 0,
-                'delivered_orders': 0
-            }
+        return jsonify(exhibitors)
         
-        exhibitors[exhibitor_name]['total_orders'] += 1
-        if order['status'] == 'delivered':
-            exhibitors[exhibitor_name]['delivered_orders'] += 1
-    
-    return jsonify(list(exhibitors.values()))
+    except Exception as e:
+        logger.error(f"Error getting exhibitors: {e}")
+        return jsonify([]), 500
 
 @app.route('/api/orders', methods=['GET'])
 def get_all_orders():
@@ -164,16 +160,38 @@ def get_all_orders():
 @app.route('/api/orders/exhibitor/<exhibitor_name>', methods=['GET'])
 def get_orders_by_exhibitor(exhibitor_name):
     """Get orders for a specific exhibitor"""
-    orders = load_orders_from_sheets()
-    exhibitor_orders = [order for order in orders if order['exhibitor_name'] == exhibitor_name]
-    
-    return jsonify({
-        'exhibitor': exhibitor_name,
-        'orders': exhibitor_orders,
-        'total_orders': len(exhibitor_orders),
-        'delivered_orders': len([o for o in exhibitor_orders if o['status'] == 'delivered']),
-        'last_updated': datetime.now().isoformat()
-    })
+    try:
+        # Try to get orders directly from sheets manager
+        exhibitor_orders = gs_manager.get_orders_for_exhibitor(SHEET_ID, exhibitor_name)
+        
+        if not exhibitor_orders:
+            # Fallback to loading all orders and filtering
+            all_orders = load_orders_from_sheets()
+            exhibitor_orders = [
+                order for order in all_orders 
+                if order['exhibitor_name'].lower() == exhibitor_name.lower()
+            ]
+        
+        delivered_count = len([o for o in exhibitor_orders if o['status'] == 'delivered'])
+        
+        return jsonify({
+            'exhibitor': exhibitor_name,
+            'orders': exhibitor_orders,
+            'total_orders': len(exhibitor_orders),
+            'delivered_orders': delivered_count,
+            'last_updated': datetime.now().isoformat()
+        })
+        
+    except Exception as e:
+        logger.error(f"Error getting orders for exhibitor {exhibitor_name}: {e}")
+        return jsonify({
+            'exhibitor': exhibitor_name,
+            'orders': [],
+            'total_orders': 0,
+            'delivered_orders': 0,
+            'last_updated': datetime.now().isoformat(),
+            'error': str(e)
+        }), 500
 
 @app.route('/api/orders/booth/<booth_number>', methods=['GET'])
 def get_orders_by_booth(booth_number):
