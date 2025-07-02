@@ -16,7 +16,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # Initialize Google Sheets Manager
-gs_manager = GoogleSheetsManager()  # Add your credentials path if needed
+gs_manager = GoogleSheetsManager('credentials.json')  # Add your credentials path if needed
 
 # Your Google Sheet ID
 SHEET_ID = "1dYeok-Dy_7a03AhPDLV2NNmGbRNoCD3q0zaAHPwxxCE"
