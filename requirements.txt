@@ -1,1 +1,5 @@
-pip install flask flask-cors pandas gspread google-auth
+flask
+flask-cors
+pandas
+gspread
+google-auth
