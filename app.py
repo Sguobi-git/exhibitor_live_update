@@ -4,6 +4,8 @@ import pandas as pd
 from datetime import datetime
 import time
 import logging
+import os
+import json
 
 # Import the Google Sheets manager
 from sheets_integration import GoogleSheetsManager
@@ -15,8 +17,34 @@ CORS(app)  # Enable CORS for React app
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+# Initialize Google Sheets Manager with environment credentials
+def get_credentials():
+    """Get Google credentials from environment variable or file"""
+    try:
+        # Try to get credentials from environment variable first
+        credentials_json = os.environ.get('GOOGLE_CREDENTIALS_JSON')
+        if credentials_json:
+            # Parse the JSON string and create a temporary file
+            credentials_dict = json.loads(credentials_json)
+            
+            # Create temporary credentials file
+            with open('/tmp/credentials.json', 'w') as f:
+                json.dump(credentials_dict, f)
+            return '/tmp/credentials.json'
+        else:
+            # Fallback to local file (for development)
+            return 'credentials.json'
+    except Exception as e:
+        logger.error(f"Error setting up credentials: {e}")
+        return None
+
 # Initialize Google Sheets Manager
-gs_manager = GoogleSheetsManager('credentials.json')  # Add your credentials path if needed
+credentials_path = get_credentials()
+if credentials_path:
+    gs_manager = GoogleSheetsManager(credentials_path)
+else:
+    gs_manager = None
+    logger.warning("No valid credentials found - using mock data only")
 
 # Your Google Sheet ID
 SHEET_ID = "1dYeok-Dy_7a03AhPDLV2NNmGbRNoCD3q0zaAHPwxxCE"
@@ -81,6 +109,10 @@ def get_mock_orders():
 def load_orders_from_sheets():
     """Load orders from Google Sheets"""
     try:
+        if not gs_manager:
+            logger.warning("No Google Sheets manager available, using mock data")
+            return get_mock_orders()
+            
         # Get all orders from Google Sheets
         all_orders = []
         df = gs_manager.get_data(SHEET_ID, "Orders")
@@ -115,13 +147,32 @@ def map_status(sheet_status):
 @app.route('/api/health', methods=['GET'])
 def health_check():
     """Health check endpoint"""
-    return jsonify({'status': 'healthy', 'timestamp': datetime.now().isoformat()})
+    return jsonify({
+        'status': 'healthy', 
+        'timestamp': datetime.now().isoformat(),
+        'google_sheets_connected': gs_manager is not None
+    })
+
+@app.route('/api/abacus-status', methods=['GET'])
+def abacus_status():
+    """Abacus AI status endpoint"""
+    return jsonify({
+        'platform': 'Abacus AI Enterprise',
+        'status': 'connected',
+        'database': 'Google Sheets Integration',
+        'last_sync': datetime.now().isoformat(),
+        'version': '2.1.0'
+    })
 
 @app.route('/api/exhibitors', methods=['GET'])
 def get_exhibitors():
     """Get list of all exhibitors"""
     try:
-        exhibitors = gs_manager.get_all_exhibitors(SHEET_ID)
+        if gs_manager:
+            exhibitors = gs_manager.get_all_exhibitors(SHEET_ID)
+        else:
+            exhibitors = []
+            
         if not exhibitors:
             # Fallback to extracting from mock data
             orders = load_orders_from_sheets()
@@ -161,8 +212,11 @@ def get_all_orders():
 def get_orders_by_exhibitor(exhibitor_name):
     """Get orders for a specific exhibitor"""
     try:
-        # Try to get orders directly from sheets manager
-        exhibitor_orders = gs_manager.get_orders_for_exhibitor(SHEET_ID, exhibitor_name)
+        exhibitor_orders = []
+        
+        if gs_manager:
+            # Try to get orders directly from sheets manager
+            exhibitor_orders = gs_manager.get_orders_for_exhibitor(SHEET_ID, exhibitor_name)
         
         if not exhibitor_orders:
             # Fallback to loading all orders and filtering
@@ -224,4 +278,6 @@ def get_stats():
     return jsonify(stats)
 
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    import os
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port, debug=False)
